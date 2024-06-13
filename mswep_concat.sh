@@ -43,74 +43,42 @@ else
     mkdir -p "$outdir" || { echo "Failed to create directory $outdir" >&2; exit 1; }
 fi
 
-if [[ "$freq" == "day" || "$freq" == "mon"]]; then
-
-    for year in {1979..2020}
-    do
-        echo "Processing year: $year at freq: $freq"
-        
-        f_in=$root_dir/$year*.nc
-        f_tmp=$outdir/tmp_$year.nc
-        f_out=$outdir/mswep_v280_${freq}_${year}.nc
-
-        if [ -f "$f_out" ]; then
-            echo "$f_out exists already, deleting"
-            rm $f_out
-        else
-            echo "File doesn't exist, proceeding"
-        fi
-
-        # Concatenate all files from a year together, save as a tmp.nc file
-        cdo --silent --no_history -L -s -f nc4c -z zip_4 cat $f_in $f_tmp
-        # Re-chunk the tmp.nc file
-        echo "Concatenating complete, now re-chunking...."
-        ncks --cnk_dmn time,12 --cnk_dmn lat,600 --cnk_dmn lon,600 $f_tmp $f_out
-        rm $f_tmp
-        # rewrite history attribute
-        hist="downloaded original files from 
-            https://www.gloh2o.org/mswep/
-            Using cdo to concatenate files, and nco to modify chunks: 
-            cdo --silent --no_history -L -s -f nc4c -z zip_4 cat $f_in $f_tmp
-            ncks --cnk_dmn time,12 --cnk_dmn lat,600 --cnk_dmn lon,600 $f_tmp $f_out"
-        # Add what we've done into the history attribute in the file. 
-        ncatted -h -O -a history,global,o,c,"$hist" ${f_out}
-
-    done
-
+if [ "$freq" == "day" ]; then
+    chunk=366
+elif [ "$freq" == "mon" ]; then
+    chunk=12
 else
-    for year in {1979..2020}
-    do
-        for month in {1..12}
-        do
-            echo "Processing year: $year at freq: $freq"
-            
-            f_in=$root_dir/${year}${month}*.nc
-            f_tmp=$outdir/tmp_$year${month}.nc
-            f_out=$outdir/mswep_v280_${freq}_${year}${month}.nc
-
-            if [ -f "$f_out" ]; then
-                echo "$f_out exists already, deleting"
-                rm $f_out
-            else
-                echo "File doesn't exist, proceeding"
-            fi
-
-            # Concatenate all 3hourly from a month together, save as a tmp.nc file
-            cdo --silent --no_history -L -s -f nc4c -z zip_4 cat $f_in $f_tmp
-            # Re-chunk the tmp.nc file
-            echo "Concatenating complete, now re-chunking...."
-            ncks --cnk_dmn time,12 --cnk_dmn lat,600 --cnk_dmn lon,600 $f_tmp $f_out
-            rm $f_tmp
-            # rewrite history attribute
-            hist="downloaded original files from 
-                https://www.gloh2o.org/mswep/
-                Using cdo to concatenate files, and nco to modify chunks: 
-                cdo --silent --no_history -L -s -f nc4c -z zip_4 cat $f_in $f_tmp
-                ncks --cnk_dmn time,12 --cnk_dmn lat,600 --cnk_dmn lon,600 $f_tmp $f_out"
-            # Add what we've done into the history attribute in the file. 
-            ncatted -h -O -a history,global,o,c,"$hist" ${f_out}
-        done
-    done
-
-
+    chunk=248
 fi
+
+for year in {1979..2020}
+do
+    echo "Processing year: $year at freq: $freq"
+        
+    f_in=$root_dir/$year*.nc
+    f_tmp=$outdir/tmp_$year.nc
+    f_out=$outdir/mswep_v280_${freq}_${year}.nc
+
+    if [ -f "$f_out" ]; then
+        echo "$f_out exists already, deleting"
+        rm $f_out
+    else
+        echo "File doesn't exist, proceeding"
+    fi
+
+    # Concatenate all files from a year together, save as a tmp.nc file
+    cdo --silent --no_history -L -s -f nc4c -z zip_4 cat $f_in $f_tmp
+    # Re-chunk the tmp.nc file
+    echo "Concatenating complete, now re-chunking...."
+    ncks --cnk_dmn time,$chunk --cnk_dmn lat,600 --cnk_dmn lon,600 $f_tmp $f_out
+    rm $f_tmp
+    # rewrite history attribute
+    hist="downloaded original files from 
+        https://www.gloh2o.org/mswep/
+        Using cdo to concatenate files, and nco to modify chunks: 
+        cdo --silent --no_history -L -s -f nc4c -z zip_4 cat $f_in $f_tmp
+        ncks --cnk_dmn time,$chunk --cnk_dmn lat,600 --cnk_dmn lon,600 $f_tmp $f_out"
+    # Add what we've done into the history attribute in the file. 
+    ncatted -h -O -a history,global,o,c,"$hist" ${f_out}
+
+done
