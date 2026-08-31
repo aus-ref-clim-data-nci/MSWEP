@@ -33,7 +33,7 @@ bash mswep_concat.sh -f <freq>
 
 We've downloaded the MSWEP netCDF data to:
 ```
-/g/data/ia39/aus-ref-clim-data-nci/mswep/data/<freq>/mswep_v280_<freq>_<year>.nc
+/g/data/jt48/aus-ref-clim-data-nci/mswep/data/<freq>/mswep_v280_<freq>_<year>.nc
 ```
 
 Where `<freq>` is mon, day, or 3hr; `<year>` is a year in the range 1979 - 2020. The Monthly, Daily, and 3Hourly data have been concatenated into yearly files. 
